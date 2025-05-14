@@ -4,7 +4,6 @@ import { AlertTriangle, User, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,18 +17,24 @@ const Register = () => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      return setError('Passwords do not match');
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
     }
     
     setError('');
     setLoading(true);
     
     try {
-      await register(name, email, password, role);
-      navigate(`/${role}/dashboard`);
+      await register(email, password, role);
+      navigate('/login');
     } catch (err) {
-      setError('Failed to create an account');
-      console.error(err);
+      console.error('Registration error:', err);
+      setError('Failed to create an account. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -61,28 +66,6 @@ const Register = () => {
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full name
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="focus:ring-red-500 focus:border-red-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border"
-                  placeholder="John Doe"
-                />
-              </div>
-            </div>
-            
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -122,6 +105,7 @@ const Register = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="focus:ring-red-500 focus:border-red-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border"
+                  placeholder="Minimum 6 characters"
                 />
               </div>
             </div>
@@ -143,6 +127,7 @@ const Register = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="focus:ring-red-500 focus:border-red-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 px-3 border"
+                  placeholder="Confirm your password"
                 />
               </div>
             </div>

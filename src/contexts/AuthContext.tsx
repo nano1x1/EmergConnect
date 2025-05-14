@@ -58,23 +58,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const getUserProfile = async (authUser: User) => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, role')
-      .eq('id', authUser.id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, email, role')
+        .eq('id', authUser.id)
+        .single();
 
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      return;
-    }
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
 
-    if (data) {
-      setUser({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-      });
+      if (data) {
+        setUser({
+          id: data.id,
+          email: data.email,
+          role: data.role,
+        });
+      }
+    } catch (error) {
+      console.error('Error in getUserProfile:', error);
     }
   };
 
@@ -88,6 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       toast.success('Successfully logged in!');
     } catch (error) {
+      console.error('Login error:', error);
       toast.error('Failed to log in. Please check your credentials.');
       throw error;
     }
@@ -110,14 +115,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               id: authUser.id,
               email: email,
               role: role,
+              password_hash: '', // This will be handled by Supabase Auth
             }
           ]);
 
-        if (profileError) throw profileError;
-      }
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // Clean up the auth user if profile creation fails
+          await supabase.auth.signOut();
+          throw profileError;
+        }
 
-      toast.success('Successfully registered! Please check your email for verification.');
+        toast.success('Successfully registered! You can now log in.');
+      }
     } catch (error) {
+      console.error('Registration error:', error);
       toast.error('Failed to register. Please try again.');
       throw error;
     }
@@ -130,6 +142,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(null);
       toast.success('Successfully logged out!');
     } catch (error) {
+      console.error('Logout error:', error);
       toast.error('Failed to log out.');
       throw error;
     }
